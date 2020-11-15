@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<SimulationSettings>
+   <title>IMAS_basic_simulation</title>
+   <application>tipper</application>  
+   <fuzzyagents>3</fuzzyagents >
+   <fuzzySettings>fcl1,fcl2,fcl2</fuzzySettings>
+   <aggregation>average</aggregation>
+</SimulationSettings>
