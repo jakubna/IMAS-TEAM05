@@ -77,14 +77,16 @@ public class UsrAgent extends Agent {
         System.out.println("FA-DSS Menu\n");
         System.out.println("Action format: <action>_<file> with action being D | I.");
         System.out.println("For example: I_config.txt, D_config.txt");
-        System.out.print("Enter input file:\n> ");
 
         // loop until a valid input is obtained
-        input = keyboard.nextLine();
-        while (!validateInput(input)) {
+        do {
             System.out.print("Enter input file:\n> ");
             input = keyboard.nextLine();
-        }
+
+            String type = input.substring(0, 2);
+            String file = input.substring(2);
+            input = type + "./files/" + file;
+        } while (!validateInput(input));
 
         return input;
     }

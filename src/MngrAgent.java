@@ -3,7 +3,6 @@ import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
-import java.util.concurrent.TimeUnit;
 
 public class MngrAgent extends Agent {
     @Override
@@ -13,30 +12,35 @@ public class MngrAgent extends Agent {
             AID user = new AID("user", AID.ISLOCALNAME);
             @Override
             public void action() {
-                //System.out.println("MNGR START");
                 ACLMessage msg = blockingReceive(MessageTemplate.MatchSender(user));
 
-                //System.out.println("MNGR RECEIVE");
                 if(msg!=null) {
+                    String cnt = msg.getContent();
+                    String type = cnt.substring(0, 2);
+                    String file = cnt.substring(2);
                     System.out.println("manager received: " + msg.getContent());
 
-                    //System.out.println("MNGR WAIT (working on response)");
-                    // - fuzzy agent creation
-                    // - contractnet
-                    try {
-                        TimeUnit.SECONDS.sleep(5);
-                    } catch (Exception e) {
+                    if (type.equals("I_")) {
+                        // Initialize instruction
+                        // Read settings
+                        SimSettings conf = SimSettings.fromXML(file);
+                        // Fuzzy agents creation
+                        System.out.println(conf);
+                        for (String s : conf.getFuzzySettings()) {
+                            System.out.println("manager creates fs with: " + s);
+                        }
 
+                    } else if (type.equals("D_")) {
+                        // request instruction
+                        // - contractnet
+                        System.out.println();
                     }
 
                     // response
-                    //System.out.println("MNGR SEND");
                     msg = new ACLMessage(ACLMessage.INFORM);
                     msg.addReceiver(user);
                     msg.setContent("manager response");
                     send(msg);
-
-                    //System.out.println("MNGR END");
                 }
             }
         });
