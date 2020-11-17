@@ -41,7 +41,7 @@ public class FzzyAgent extends Agent {
 
         try {
             DFService.register(this, dfd);
-            addBehaviour(new UserAgentServeLoop());
+            addBehaviour(new FuzzyAgentBehaviour());
         } catch (FIPAException e) {
             logger.log(Logger.SEVERE, "Agent "+getLocalName()+" - Cannot register with DF", e);
             doDelete();
