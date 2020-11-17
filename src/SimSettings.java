@@ -48,7 +48,6 @@ public class SimSettings {
             jaxbContext = JAXBContext.newInstance(SimSettings.class);
             Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
             simSettings = (SimSettings)jaxbUnmarshaller.unmarshal(xmlFile);
-            System.out.println(simSettings);
         }
         catch (JAXBException e)
         {
