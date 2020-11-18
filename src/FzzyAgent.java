@@ -13,7 +13,7 @@ public class FzzyAgent extends Agent {
         public void action() {
             Object[] args = getArguments();
             String name = args[0].toString();
-            System.out.println("I EXIST, I'M "+getName()+" WITH CONFIGURATION "+name);
+            System.out.println("-> "+getName()+": Has been created with configuration "+name);
         }
 
 
