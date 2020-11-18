@@ -14,6 +14,7 @@ import jade.domain.FIPAException;
 import jade.util.Logger;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class MngrAgent extends Agent {
     private Logger logger = Logger.getMyLogger(getClass().getName());
@@ -29,7 +30,7 @@ public class MngrAgent extends Agent {
                 String cnt = msg.getContent();
                 String type = cnt.substring(0, 2);
                 String file = cnt.substring(2);
-                System.out.println("manager received: " + msg.getContent());
+                System.out.println("-> MANAGER AGENT: Received '" + msg.getContent()+"'");
 
                 if (type.equals("I_")) {
                     // Initialize instruction
@@ -53,19 +54,25 @@ public class MngrAgent extends Agent {
                                 e.printStackTrace();
                             }
                         }else{
-                            System.out.println(name+" already exists");
+                            System.out.println("-> MANAGER AGENT: "+name+" already exists");
                         }
+                    }
+                    // sleep to wait FA until ContractNet used
+                    try {
+                        TimeUnit.MILLISECONDS.sleep(100);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
                     }
                 } else if (type.equals("D_")) {
                     // request instruction
                     // - contractnet
-                    System.out.println();
+                    System.out.println("-> MANAGER AGENT: not able to process requests");
                 }
 
                 // response
                 msg = new ACLMessage(ACLMessage.INFORM);
                 msg.addReceiver(user);
-                msg.setContent("manager response");
+                msg.setContent("manager default response");
                 send(msg);
             }
         }
