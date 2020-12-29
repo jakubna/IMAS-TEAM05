@@ -88,12 +88,6 @@ public class MngrAgent extends Agent {
         @Override
         public int onEnd() {
             //System.out.println("Agent "+getLocalName()+": RESETING");
-
-//            ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
-//            msg.addReceiver(new AID("user", AID.ISLOCALNAME));
-//            msg.setContent("request result");
-//            send(msg);
-
             addBehaviour(new MngrAgentServeLoop());
             return super.onEnd();
         }
