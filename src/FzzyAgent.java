@@ -5,9 +5,12 @@ import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.FIPAException;
 import jade.util.Logger;
+import net.sourceforge.jFuzzyLogic.FIS;
 
 public class FzzyAgent extends Agent {
     private Logger logger = Logger.getMyLogger(getClass().getName());
+    private FIS fis = null;
+
     private class FuzzyAgentBehaviour extends OneShotBehaviour {
         @Override
         public void action() {
@@ -35,5 +38,22 @@ public class FzzyAgent extends Agent {
             logger.log(Logger.SEVERE, "Agent "+getLocalName()+" - Cannot register with DF", e);
             doDelete();
         }
+    }
+
+
+    private double evaluateTipper(double[] variables) {
+        fis.setVariable("service", variables[0]);
+        fis.setVariable("food", variables[1]);
+        double tip = fis.getVariable("tip").getLatestDefuzzifiedValue();
+        return tip;
+    }
+
+
+    private double evaluateQoS(double[] variables) {
+        fis.setVariable("commitment", variables[0]);
+        fis.setVariable("clarity", variables[1]);
+        fis.setVariable("influence", variables[2]);
+        double serviceQuality = fis.getVariable("service_quality").getLatestDefuzzifiedValue();
+        return serviceQuality;
     }
 }
