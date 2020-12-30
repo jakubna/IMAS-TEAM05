@@ -20,6 +20,7 @@ import jade.util.Logger;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -112,38 +113,45 @@ public class MngrAgent extends Agent {
                     // Initialize instruction
                     // Read settings
                     SimSettings conf = SimSettings.fromXML(file);
-                    // Fuzzy agents creation
-                    String[] fuzzyS = conf.getFuzzySettings();
-                    String scenario = conf.getApplication();
-                    ContainerController container = getContainerController();
-                    for (int i=0;i<conf.getFuzzyagents();i++)
-                    {
-                        String name = "FS"+i+scenario+fuzzyS[i];
-                        if (!fuzzyAgents.contains(name)) {
-                            Object[] args = new Object[2];
-                            args[0] = scenario;
-                            args[1] = fuzzyS[i];
-                            try {
-                                AgentController a = container.createNewAgent(name, "FzzyAgent", args);
-                                a.start();
-                                fuzzyAgents.add(name);
-                                nResponders++;
-                            } catch (StaleProxyException e) {
-                                e.printStackTrace();
+                    if (conf == null) {
+                        msg = new ACLMessage(ACLMessage.INFORM);
+                        msg.addReceiver(user);
+                        msg.setContent("Could not process configuration file. Format does not seem to correspond.");
+                        send(msg);
+                        finished = false;
+                    } else {
+                        // Fuzzy agents creation
+                        String[] fuzzyS = conf.getFuzzySettings();
+                        String scenario = conf.getApplication();
+                        ContainerController container = getContainerController();
+                        for (int i = 0; i < conf.getFuzzyagents(); i++) {
+                            String name = "FS" + i + scenario + fuzzyS[i];
+                            if (!fuzzyAgents.contains(name)) {
+                                Object[] args = new Object[2];
+                                args[0] = scenario;
+                                args[1] = fuzzyS[i];
+                                try {
+                                    AgentController a = container.createNewAgent(name, "FzzyAgent", args);
+                                    a.start();
+                                    fuzzyAgents.add(name);
+                                    nResponders++;
+                                } catch (StaleProxyException e) {
+                                    e.printStackTrace();
+                                }
+                            } else {
+                                found = true;
                             }
-                        }else{
-                            found = true;
                         }
+                        msg = new ACLMessage(ACLMessage.INFORM);
+                        msg.addReceiver(user);
+                        if (found) {
+                            msg.setContent("Found '" + scenario + "' already initialised.");
+                        } else {
+                            msg.setContent("Configuration '" + scenario + "' initialised.");
+                        }
+                        send(msg);
+                        finished = false;
                     }
-                    msg = new ACLMessage(ACLMessage.INFORM);
-                    msg.addReceiver(user);
-                    if (found){
-                        msg.setContent("Found '"+scenario+"' already initialised.");
-                    }else{
-                        msg.setContent("Configuration '"+scenario+"' initialised.");
-                    }
-                    send(msg);
-                    finished = false;
                 } else if (type.equals("D_")) {
                     byte[] encoded = null;
                     try {
@@ -162,7 +170,15 @@ public class MngrAgent extends Agent {
                         return;
                     }
 
-                    String scenario = request.split("\n")[0];
+                    String [] req_spl = request.split("\n");
+                    String scenario = req_spl[0];
+                    String[] data = Arrays.copyOfRange(req_spl, 1, req_spl.length);
+
+                    ArrayList<Float[]> matrix = new ArrayList<Float[]>();
+                    for (String d: data) {
+                        Float [] row = Arrays.stream(d.split(",")).map(Float::valueOf).toArray(Float[]::new);
+                        matrix.add(row);
+                    }
 
                     ServiceDescription sd = new ServiceDescription();
                     DFAgentDescription dfd = new DFAgentDescription();
@@ -183,7 +199,11 @@ public class MngrAgent extends Agent {
                         msg2.setProtocol(FIPANames.InteractionProtocol.FIPA_CONTRACT_NET);
                         // We want to receive a reply in 10 secs
                         msg2.setReplyByDate(new Date(System.currentTimeMillis() + 10000));
-                        msg2.setContent("try-action");
+                        try {
+                            msg2.setContentObject(matrix);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
                         myAgent.addBehaviour(new MnrAgentContractNet(myAgent, msg2));
                         finished = true;
                     } else {

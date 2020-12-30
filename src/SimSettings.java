@@ -51,7 +51,7 @@ public class SimSettings {
         }
         catch (JAXBException e)
         {
-            e.printStackTrace();
+            //e.printStackTrace();
         }
         return simSettings;
     }

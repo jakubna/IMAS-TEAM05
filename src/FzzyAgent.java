@@ -5,8 +5,7 @@ import jade.core.behaviours.CyclicBehaviour;
 import jade.core.behaviours.OneShotBehaviour;
 import jade.domain.FIPAAgentManagement.*;
 import jade.domain.FIPANames;
-import jade.lang.acl.ACLMessage;
-import jade.lang.acl.MessageTemplate;
+import jade.lang.acl.*;
 import jade.wrapper.AgentController;
 import jade.wrapper.ContainerController;
 import jade.wrapper.StaleProxyException;
@@ -35,6 +34,12 @@ public class FzzyAgent extends Agent {
         @Override
         protected ACLMessage handleCfp(ACLMessage cfp) throws RefuseException, FailureException, NotUnderstoodException {
             //System.out.println("Agent "+getLocalName()+": CFP received from "+cfp.getSender().getName()+". Action is "+cfp.getContent());
+            ArrayList<Float[]> data = null;
+            try {
+                data = (ArrayList<Float[]>) cfp.getContentObject();
+            } catch (UnreadableException e) {
+                e.printStackTrace();
+            }
             int proposal = (int) (Math.random() * 10);
             if (proposal > 2) {
                 // We provide a proposal
