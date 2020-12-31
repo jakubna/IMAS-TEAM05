@@ -1,4 +1,3 @@
-import com.sun.tools.internal.xjc.model.CNonElement;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
@@ -8,6 +7,7 @@ import jade.core.behaviours.SimpleBehaviour;
 import jade.domain.FIPANames;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
+import jade.lang.acl.UnreadableException;
 import jade.wrapper.AgentController;
 import jade.wrapper.ContainerController;
 import jade.wrapper.StaleProxyException;
@@ -25,17 +25,21 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 import jade.lang.acl.ACLMessage;
 import jade.proto.ContractNetInitiator;
 
 public class MngrAgent extends Agent {
     private Logger logger = Logger.getMyLogger(getClass().getName());
-    private int nResponders = 0;
 
     private class MnrAgentContractNet extends ContractNetInitiator{
-        public MnrAgentContractNet(Agent a, ACLMessage cfp) {
+        private int nResponders;
+        private LinkedList<List<Double>> results = new LinkedList<>();
+
+        public MnrAgentContractNet(Agent a, ACLMessage cfp, int nResponders) {
             super(a, cfp);
+            this.nResponders = nResponders; // expected responders
             //System.out.println("Content: "+cfp.getAllReceiver());
         }
 
@@ -60,10 +64,6 @@ public class MngrAgent extends Agent {
         }
 
         protected void handleAllResponses(Vector responses, Vector acceptances) {
-            if (responses.size() < nResponders) {
-                // Some responder didn't reply within the specified timeout
-                //System.out.println("Timeout expired: missing "+(nResponders - responses.size())+" responses");
-            }
             // Evaluate proposals.
             Enumeration e = responses.elements();
             while (e.hasMoreElements()) {
@@ -72,18 +72,35 @@ public class MngrAgent extends Agent {
                     ACLMessage reply = msg.createReply();
                     reply.setPerformative(ACLMessage.ACCEPT_PROPOSAL);
                     acceptances.addElement(reply);
-                    int proposal = Integer.parseInt(msg.getContent());
-                    //System.out.println("Accepting proposal "+proposal+" from responder "+msg.getSender());
                 }
             }
-            ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
-            msg.addReceiver(new AID("user", AID.ISLOCALNAME));
-            msg.setContent("request result");
-            send(msg);
         }
 
         protected void handleInform(ACLMessage inform) {
-            //System.out.println("Agent "+inform.getSender().getName()+" successfully performed the requested action");
+            // accumulate results
+            try {
+                ArrayList<Double> result = (ArrayList<Double>) inform.getContentObject();
+                results.add(result);
+            } catch (
+            UnreadableException e) {
+                e.printStackTrace();
+            }
+            // when all results have been received
+            if (results.size() == nResponders) {
+                // aggregate
+                ArrayList<Double> agg_results = aggregate(results);
+
+                // send final result to user agent
+                ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
+                msg.addReceiver(new AID("user", AID.ISLOCALNAME));
+                try {
+                    msg.setContentObject(agg_results);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                msg.setEncoding("ArrayList<Double>");
+                send(msg);
+            }
         }
 
         @Override
@@ -117,24 +134,24 @@ public class MngrAgent extends Agent {
                         msg = new ACLMessage(ACLMessage.INFORM);
                         msg.addReceiver(user);
                         msg.setContent("Could not process configuration file. Format does not seem to correspond.");
+                        msg.setEncoding("String");
                         send(msg);
                         finished = false;
                     } else {
                         // Fuzzy agents creation
                         String[] fuzzyS = conf.getFuzzySettings();
-                        String scenario = conf.getApplication();
+                        String domain = conf.getApplication();
                         ContainerController container = getContainerController();
                         for (int i = 0; i < conf.getFuzzyagents(); i++) {
-                            String name = "FS" + i + scenario + fuzzyS[i];
+                            String name = "FS" + i + domain + fuzzyS[i];
                             if (!fuzzyAgents.contains(name)) {
                                 Object[] args = new Object[2];
-                                args[0] = scenario;
+                                args[0] = domain;
                                 args[1] = fuzzyS[i];
                                 try {
                                     AgentController a = container.createNewAgent(name, "FzzyAgent", args);
                                     a.start();
                                     fuzzyAgents.add(name);
-                                    nResponders++;
                                 } catch (StaleProxyException e) {
                                     e.printStackTrace();
                                 }
@@ -145,10 +162,11 @@ public class MngrAgent extends Agent {
                         msg = new ACLMessage(ACLMessage.INFORM);
                         msg.addReceiver(user);
                         if (found) {
-                            msg.setContent("Found '" + scenario + "' already initialised.");
+                            msg.setContent("Found '" + domain + "' already initialised.");
                         } else {
-                            msg.setContent("Configuration '" + scenario + "' initialised.");
+                            msg.setContent("Configuration '" + domain + "' initialised.");
                         }
+                        msg.setEncoding("String");
                         send(msg);
                         finished = false;
                     }
@@ -171,24 +189,25 @@ public class MngrAgent extends Agent {
                         msg = new ACLMessage(ACLMessage.INFORM);
                         msg.addReceiver(user);
                         msg.setContent("Input file not following request format.");
+                        msg.setEncoding("String");
                         send(msg);
                         finished = false;
                         return;
                     }
 
                     String [] req_spl = request.split("\n");
-                    String scenario = req_spl[0];
+                    String domain = req_spl[0];
                     String[] data = Arrays.copyOfRange(req_spl, 1, req_spl.length);
 
-                    ArrayList<Float[]> matrix = new ArrayList<Float[]>();
+                    ArrayList<Double[]> matrix = new ArrayList<>();
                     for (String d: data) {
-                        Float [] row = Arrays.stream(d.split(",")).map(Float::valueOf).toArray(Float[]::new);
+                        Double[] row = Arrays.stream(d.split(",")).map(Double::valueOf).toArray(Double[]::new);
                         matrix.add(row);
                     }
 
                     ServiceDescription sd = new ServiceDescription();
                     DFAgentDescription dfd = new DFAgentDescription();
-                    sd.setType(scenario);
+                    sd.setType(domain);
                     dfd.addServices(sd);
                     DFAgentDescription[] result = null;
                     try {
@@ -210,12 +229,13 @@ public class MngrAgent extends Agent {
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
-                        myAgent.addBehaviour(new MnrAgentContractNet(myAgent, msg2));
+                        myAgent.addBehaviour(new MnrAgentContractNet(myAgent, msg2, result.length));
                         finished = true;
                     } else {
                         msg = new ACLMessage(ACLMessage.INFORM);
                         msg.addReceiver(user);
-                        msg.setContent("Configuration '"+scenario+"' not previously initialised.");
+                        msg.setContent("Configuration '"+domain+"' not previously initialised.");
+                        msg.setEncoding("String");
                         send(msg);
                         finished = false;
                     }
@@ -245,5 +265,18 @@ public class MngrAgent extends Agent {
             logger.log(Logger.SEVERE, "Agent "+getLocalName()+" - Cannot register with DF", e);
             doDelete();
         }
+    }
+
+    protected ArrayList<Double> aggregate(List<List<Double>> results) {
+        // TODO: perform aggregation
+        int i = 0;
+        for (List<Double> res:results) {
+            System.out.print("Results " + i++);
+            for (Double val:res) {
+                System.out.print(" " + val);
+            }
+            System.out.print("\n");
+        }
+        return new ArrayList<Double>();
     }
 }
