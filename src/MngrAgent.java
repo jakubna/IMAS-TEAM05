@@ -152,6 +152,12 @@ public class MngrAgent extends Agent {
                         send(msg);
                         finished = false;
                     }
+                    // sleep to wait FA until ContractNet used
+                    try {
+                        TimeUnit.MILLISECONDS.sleep(100);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                 } else if (type.equals("D_")) {
                     byte[] encoded = null;
                     try {

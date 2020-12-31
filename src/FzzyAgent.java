@@ -1,4 +1,3 @@
-import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.Behaviour;
 import jade.core.behaviours.CyclicBehaviour;
@@ -9,6 +8,7 @@ import jade.lang.acl.*;
 import jade.wrapper.AgentController;
 import jade.wrapper.ContainerController;
 import jade.wrapper.StaleProxyException;
+
 import jade.domain.DFService;
 import jade.domain.FIPAException;
 import jade.util.Logger;

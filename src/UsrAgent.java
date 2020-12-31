@@ -41,7 +41,7 @@ public class UsrAgent extends Agent {
                 //System.out.println("USR receive response");
                 ACLMessage msg = blockingReceive(MessageTemplate.MatchSender(manager));
                 if (msg != null) {
-                    System.out.println("USR received: "+msg.getContent());
+                    System.out.println("-> USER AGENT: Received '"+msg.getContent()+"'");
                 }
                 //msg = null;
                 hasToReadInput = true;
