@@ -7,9 +7,12 @@ import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
+import jade.lang.acl.UnreadableException;
 import jade.util.Logger;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Scanner;
 
 public class UsrAgent extends Agent {
@@ -40,9 +43,25 @@ public class UsrAgent extends Agent {
                 //wait for manager response
                 //System.out.println("USR receive response");
                 ACLMessage msg = blockingReceive(MessageTemplate.MatchSender(manager));
-                if (msg != null) {
+
+                if (msg.getEncoding().equals("String")) {
                     System.out.println("-> USER AGENT: Received '"+msg.getContent()+"'");
                 }
+                else {
+                    ArrayList<Double> res = null;
+                    try {
+                        res = (ArrayList<Double>) msg.getContentObject();
+                    } catch (UnreadableException e) {
+                        e.printStackTrace();
+                    }
+
+                    String res_str = "";
+                    for (Double val:res) {
+                        res_str = res_str + val + " ";
+                    }
+                    System.out.println("-> USER AGENT: Received '"+res_str+"'");
+                }
+
                 //msg = null;
                 hasToReadInput = true;
             }
@@ -76,7 +95,7 @@ public class UsrAgent extends Agent {
         System.out.println("\n--------------------------------------------");
         System.out.println("FA-DSS Menu\n");
         System.out.println("Action format: <action>_<file> with action being D | I.");
-        System.out.println("For example: I_config.txt, D_config.txt");
+        System.out.println("For example: I_config.txt, D_requests.txt");
 
         // loop until a valid input is obtained
         do {
@@ -95,7 +114,7 @@ public class UsrAgent extends Agent {
     private boolean validateInput(String input) {
         if (!input.startsWith("D_") && !input.startsWith("I_")) {
             System.out.println("ERROR: Invalid input. Expected format is <action>_<file> " +
-                    "with action being D | I. For example: I_config.txt, D_config.txt");
+                    "with action being D | I. For example: I_config.txt, D_requests.txt");
             return false;
         }
 
