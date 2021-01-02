@@ -268,15 +268,21 @@ public class MngrAgent extends Agent {
     }
 
     protected ArrayList<Double> aggregate(List<List<Double>> results) {
-        // TODO: perform aggregation
+        //  aggregation = average
+        ArrayList<Double> sum_results = new ArrayList<>(Collections.nCopies(results.size(), 0.));
         int i = 0;
+        int j=0;
         for (List<Double> res:results) {
             System.out.print("Results " + i++);
+            j=0;
             for (Double val:res) {
                 System.out.print(" " + val);
+                sum_results.set(j,sum_results.get(j)+val);
+		        j++;
             }
             System.out.print("\n");
         }
-        return new ArrayList<Double>();
+        List<Double> avg_results = sum_results.stream().map(d -> d / i).collect(Collectors.toList());
+        return avg_results;
     }
 }
