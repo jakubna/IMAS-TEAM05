@@ -278,7 +278,7 @@ public class MngrAgent extends Agent {
             for (Double val:res) {
                 System.out.print(" " + val);
                 sum_results.set(j,sum_results.get(j)+val);
-		        j++;
+		j++;
             }
             System.out.print("\n");
         }
