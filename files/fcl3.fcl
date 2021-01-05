@@ -54,7 +54,7 @@ RULEBLOCK No1
 	RULE 9 : 	IF commitment IS largely 		AND influence IS low 	AND clarity IS high 	THEN service_quality IS sufficient WITH 0.1;
 	RULE 10 : 	IF commitment IS satISfactory 	AND influence IS high 							THEN service_quality IS sufficient;
 	RULE 11 : 	IF commitment IS satISfactory 	AND influence IS medium 						THEN service_quality IS sufficient WITH 0.66;
-	RULE 12 : 	IF commitment IS satISfactory 	AND influence IS low 							THEN service_quality IS sufficient WITH 0.33;
+	RULE 12 : 	IF commitment IS satISfactory 	AND influence IS low 							THEN service_quality IS sufficient WITH 0.4;
 	RULE 13 : 	IF commitment IS satISfactory 	AND influence IS high 	AND clarity IS high 	THEN service_quality IS sufficient;
 	RULE 14 : 	IF commitment IS satISfactory 	AND influence IS medium AND clarity IS high 	THEN service_quality IS sufficient WITH 0.66;
 	RULE 15 : 	IF commitment IS satISfactory 	AND influence IS low 	AND clarity IS high 	THEN service_quality IS sufficient WITH 0.33;

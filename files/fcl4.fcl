@@ -33,7 +33,7 @@ END_FUZZIFY
 
 DEFUZZIFY service_quality
 	TERM inadequate := GAUSS 0 1;
-	TERM sufficient := GAUSS 2.5 1;
+	TERM sufficient := GAUSS 3 1;
 	TERM excellent := GAUSS 5 1;
 	METHOD : COG;
 	DEFAULT := 0;

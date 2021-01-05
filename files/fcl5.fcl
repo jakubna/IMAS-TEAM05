@@ -27,13 +27,13 @@ END_FUZZIFY
 
 FUZZIFY influence
 	TERM low := GAUSS 0 1;
-	TERM medium := GAUSS 2.5 1;
-	TERM high:= GAUSS 5 1;
+	TERM medium := GAUSS 1 1;
+	TERM high:= GAUSS 4 1;
 END_FUZZIFY
 
 DEFUZZIFY service_quality
 	TERM inadequate := GAUSS 0 1;
-	TERM sufficient := GAUSS 2.5 1;
+	TERM sufficient := GAUSS 4 1;
 	TERM excellent := GAUSS 5 1;
 	METHOD : COG;
 	DEFAULT := 0;
@@ -67,13 +67,8 @@ RULEBLOCK No1
 	RULE 22 : 	IF commitment IS partially 		AND influence IS high	AND clarity IS NOT high	THEN service_quality IS sufficient WITH 0.4;
 	RULE 23 : 	IF commitment IS partially 		AND influence IS medium	AND clarity IS NOT high	THEN service_quality IS sufficient WITH 0.25;
 	RULE 24 : 	IF commitment IS partially 		AND influence IS low	AND clarity IS NOT high	THEN service_quality IS sufficient WITH 0.1;
-	RULE 25 : 	IF commitment IS minimal 		AND influence IS high 	AND clarity IS high		THEN service_quality IS inadequate WITH 0.5;
-	RULE 26 : 	IF commitment IS minimal 		AND influence IS medium	AND clarity IS high		THEN service_quality IS inadequate WITH 0.3;
-	RULE 27 : 	IF commitment IS minimal 		AND influence IS low	AND clarity IS high		THEN service_quality IS inadequate WITH 0.1;
-	RULE 28 : 	IF commitment IS minimal 		AND influence IS high	AND clarity IS NOT high	THEN service_quality IS inadequate WITH 0.4;
-	RULE 29 : 	IF commitment IS minimal 		AND influence IS medium	AND clarity IS NOT high	THEN service_quality IS inadequate WITH 0.2;
-	RULE 30 : 	IF commitment IS minimal 		AND influence IS low	AND clarity IS NOT high	THEN service_quality IS inadequate WITH 0.05;
-	RULE 31 : 	IF commitment IS nothing 														THEN service_quality IS inadequate;
+	RULE 25 : 	IF commitment IS minimal 														THEN service_quality IS inadequate WITH 0.8;
+	RULE 26 : 	IF commitment IS nothing 														THEN service_quality IS inadequate;
 END_RULEBLOCK
 
 END_FUNCTION_BLOCK
