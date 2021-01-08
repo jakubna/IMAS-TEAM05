@@ -22,7 +22,7 @@ VAR_OUTPUT				// Define output variable
 END_VAR
 
 FUZZIFY service			// Fuzzify input variable 'service': {'poor', 'good' , 'excellent'}
-	TERM poor := (0, 1) (3 1) (4, 0); 
+	TERM poor := (0, 1) (3, 1) (4, 0);
 	TERM good := (3, 0) (5,1) (8,0);
 	TERM excellent := (7, 0) (9, 1);
 END_FUZZIFY
