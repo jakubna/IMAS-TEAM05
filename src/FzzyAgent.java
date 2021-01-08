@@ -1,13 +1,7 @@
 import jade.core.Agent;
-import jade.core.behaviours.Behaviour;
-import jade.core.behaviours.CyclicBehaviour;
-import jade.core.behaviours.OneShotBehaviour;
 import jade.domain.FIPAAgentManagement.*;
 import jade.domain.FIPANames;
 import jade.lang.acl.*;
-import jade.wrapper.AgentController;
-import jade.wrapper.ContainerController;
-import jade.wrapper.StaleProxyException;
 
 import jade.domain.DFService;
 import jade.domain.FIPAException;
@@ -17,8 +11,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
@@ -35,22 +27,16 @@ public class FzzyAgent extends Agent {
 
         public FuzzyAgentBehaviour(Agent a, MessageTemplate mt) {
             super(a, mt);
-            Object[] args = getArguments();
-            String name = args[0].toString();
-            //System.out.println("-> "+myAgent.getName()+": Has been created with configuration "+name);
         }
 
         @Override
         protected ACLMessage handleCfp(ACLMessage cfp) {
-            //System.out.println("Agent "+getLocalName()+": CFP received from "+cfp.getSender().getName()+". Action is "+cfp.getContent());
-
             try {
                 input = (ArrayList<Double[]>) cfp.getContentObject();
             } catch (UnreadableException e) {
                 e.printStackTrace();
             }
             // We provide a proposal
-            //System.out.println("Agent "+getLocalName()+": Proposing "+proposal);
             ACLMessage propose = cfp.createReply();
             propose.setPerformative(ACLMessage.PROPOSE);
             propose.setContent(domain);
@@ -58,46 +44,32 @@ public class FzzyAgent extends Agent {
         }
 
         @Override
-        protected ACLMessage handleAcceptProposal(ACLMessage cfp, ACLMessage propose, ACLMessage accept) throws FailureException {
-            //System.out.println("Agent "+getLocalName()+": Proposal accepted");
-            //codicio temporal
-            if (cfp != null) {
-                //System.out.println("Agent "+getLocalName()+": Action successfully performed");
-                ACLMessage inform = accept.createReply();
-                inform.setPerformative(ACLMessage.INFORM);
+        protected ACLMessage handleAcceptProposal(ACLMessage cfp, ACLMessage propose, ACLMessage accept) {
+            ACLMessage inform = accept.createReply();
+            inform.setPerformative(ACLMessage.INFORM);
 
-                ArrayList<Double> results = processRequest(input);
-                try {
-                    inform.setContentObject(results);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                return inform;
+            // evaluate FIS with the input data
+            ArrayList<Double> results = processRequest(input);
+            try {
+                inform.setContentObject(results);
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-            else {
-                //System.out.println("Agent "+getLocalName()+": Action execution failed");
-                throw new FailureException("unexpected-error");
-            }
-        }
-
-        @Override
-        protected void handleRejectProposal(ACLMessage cfp, ACLMessage propose, ACLMessage reject) {
-            //System.out.println("Agent "+getLocalName()+": Proposal rejected");
+            return inform;
         }
 
         @Override
         public int onEnd() {
-            //System.out.println("Agent "+getLocalName()+": RESETING");
             reset();
             return super.onEnd();
         }
     }
 
-
     protected void setup() {
+        // init Fuzzy Inference System
         Object[] args = getArguments();
         domain = args[0].toString();
-        Path file = Paths.get(System.getProperty("user.dir"),"files", args[1].toString() + ".fcl");
+        Path file = Paths.get("files").resolve(args[1].toString() + ".fcl");
         fis = FIS.load(file.toString(), true);
 
         // Registration with the DF
@@ -106,7 +78,6 @@ public class FzzyAgent extends Agent {
         sd.setType("FuzzyAgent");
         sd.setType(domain);
         sd.setName(getName());
-        // sd.setOwnership("TEAM05");
         dfd.setName(getAID());
         dfd.addServices(sd);
 
@@ -122,7 +93,6 @@ public class FzzyAgent extends Agent {
             doDelete();
         }
     }
-
 
     private ArrayList<Double> processRequest(ArrayList<Double[]> input) {
         ArrayList<Double> result = new ArrayList<>(input.size());
@@ -140,7 +110,6 @@ public class FzzyAgent extends Agent {
         return result;
     }
     
-    
     private Double evaluateTipper(Double[] variables) {
         fis.setVariable("service", variables[0]);
         fis.setVariable("food", variables[1]);
@@ -148,7 +117,6 @@ public class FzzyAgent extends Agent {
         Double tip = fis.getVariable("tip").getLatestDefuzzifiedValue();
         return tip;
     }
-
 
     private Double evaluateQoS(Double[] variables) {
         fis.setVariable("commitment", variables[0]);
