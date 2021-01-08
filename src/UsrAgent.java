@@ -12,6 +12,8 @@ import jade.util.Logger;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Scanner;
 
@@ -103,8 +105,8 @@ public class UsrAgent extends Agent {
             input = keyboard.nextLine();
 
             String type = input.substring(0, 2);
-            String file = input.substring(2);
-            input = type + "./files/" + file;
+            Path file = Paths.get(System.getProperty("user.dir"),"files", input.substring(2));
+            input = type + file.toString();
         } while (!validateInput(input));
 
         return input;

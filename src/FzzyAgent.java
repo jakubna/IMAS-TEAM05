@@ -14,6 +14,8 @@ import jade.domain.FIPAException;
 import jade.util.Logger;
 
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -95,7 +97,8 @@ public class FzzyAgent extends Agent {
     protected void setup() {
         Object[] args = getArguments();
         domain = args[0].toString();
-        fis = FIS.load("./files/" + args[1].toString() + ".fcl", true);
+        Path file = Paths.get(System.getProperty("user.dir"),"files", args[1].toString() + ".fcl");
+        fis = FIS.load(file.toString(), true);
 
         // Registration with the DF
         DFAgentDescription dfd = new DFAgentDescription();
