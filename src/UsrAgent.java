@@ -11,6 +11,7 @@ import jade.lang.acl.UnreadableException;
 import jade.util.Logger;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -20,6 +21,7 @@ import java.util.Scanner;
 public class UsrAgent extends Agent {
 
     private Logger logger = Logger.getMyLogger(getClass().getName());
+    private String currentFile = null;
 
     private class UserAgentServeLoop extends CyclicBehaviour {
         boolean hasToReadInput = true; // indicates if user input is needed
@@ -33,17 +35,14 @@ public class UsrAgent extends Agent {
                 input = readUserInput();
 
                 // pass instruction to Manager
-                //System.out.println("USR send instruction");
                 ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
                 msg.addReceiver(manager);
                 msg.setContent(input);
                 send(msg);
-                //msg = null;
                 hasToReadInput = false;
 
             } else {
                 //wait for manager response
-                //System.out.println("USR receive response");
                 ACLMessage msg = blockingReceive(MessageTemplate.MatchSender(manager));
 
                 if (msg.getEncoding().equals("String")) {
@@ -57,14 +56,20 @@ public class UsrAgent extends Agent {
                         e.printStackTrace();
                     }
 
-                    String res_str = "";
-                    for (Double val:res) {
-                        res_str = res_str + val + " ";
+                    // save result to file
+                    Path outfile = Paths.get("files").resolve("result_" + currentFile);
+                    try {
+                        FileWriter writer = new FileWriter(outfile.toString());
+                        for (Double val:res) {
+                            writer.write(val + "\n");
+                        }
+                        writer.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
                     }
-                    System.out.println("-> USER AGENT: Received '"+res_str+"'");
+                    System.out.println("-> USER AGENT: Received response. Saving results to '" + outfile.toString() + "'");
                 }
 
-                //msg = null;
                 hasToReadInput = true;
             }
         }
@@ -76,7 +81,6 @@ public class UsrAgent extends Agent {
         ServiceDescription sd = new ServiceDescription();
         sd.setType("UserAgent");
         sd.setName(getName());
-        // sd.setOwnership("TILAB");
         dfd.setName(getAID());
         dfd.addServices(sd);
 
@@ -97,7 +101,7 @@ public class UsrAgent extends Agent {
         System.out.println("\n--------------------------------------------");
         System.out.println("FA-DSS Menu\n");
         System.out.println("Action format: <action>_<file> with action being D | I.");
-        System.out.println("For example: I_config.txt, D_requests.txt");
+        System.out.println("Place input file in folder 'files', then enter name such as: I_config.txt, D_requests.txt");
 
         // loop until a valid input is obtained
         do {
@@ -105,7 +109,8 @@ public class UsrAgent extends Agent {
             input = keyboard.nextLine();
 
             String type = input.substring(0, 2);
-            Path file = Paths.get(System.getProperty("user.dir"),"files", input.substring(2));
+            currentFile = input.substring(2);
+            Path file = Paths.get("files").resolve(currentFile);
             input = type + file.toString();
         } while (!validateInput(input));
 
@@ -123,7 +128,7 @@ public class UsrAgent extends Agent {
         String path = input.substring(2);
         if (!(new File(path)).exists()) {
             System.out.println("ERROR: File \"" + path + "\" could not be found. " +
-                    "Please enter a valid path.");
+                    "Please enter a valid path. Files must be placed in 'files' folder.");
             return false;
         }
         return true;

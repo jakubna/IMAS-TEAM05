@@ -1,8 +1,5 @@
 import jade.core.AID;
 import jade.core.Agent;
-import jade.core.behaviours.CyclicBehaviour;
-import jade.core.behaviours.FSMBehaviour;
-import jade.core.behaviours.ParallelBehaviour;
 import jade.core.behaviours.SimpleBehaviour;
 import jade.domain.FIPANames;
 import jade.lang.acl.ACLMessage;
@@ -18,9 +15,7 @@ import jade.domain.FIPAException;
 
 import jade.util.Logger;
 
-import java.io.File;
 import java.io.IOException;
-import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -28,7 +23,6 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import jade.lang.acl.ACLMessage;
 import jade.proto.ContractNetInitiator;
 
 public class MngrAgent extends Agent {
@@ -41,26 +35,9 @@ public class MngrAgent extends Agent {
         public MnrAgentContractNet(Agent a, ACLMessage cfp, int nResponders) {
             super(a, cfp);
             this.nResponders = nResponders; // expected responders
-            //System.out.println("Content: "+cfp.getAllReceiver());
-        }
-
-        protected void handlePropose(ACLMessage propose, Vector v) {
-            //System.out.println("Agent "+propose.getSender().getName()+" proposed "+propose.getContent());
-        }
-
-        protected void handleRefuse(ACLMessage refuse) {
-            //System.out.println("Agent "+refuse.getSender().getName()+" refused");
         }
 
         protected void handleFailure(ACLMessage failure) {
-            if (failure.getSender().equals(myAgent.getAMS())) {
-                // FAILURE notification from the JADE runtime: the receiver does not exist
-                //System.out.println("Responder does not exist");
-            }
-            else {
-                //System.out.println("Agent "+failure.getSender().getName()+" failed");
-            }
-            // Immediate failure --> we will not receive a response from this agent
             nResponders--;
         }
 
@@ -82,8 +59,7 @@ public class MngrAgent extends Agent {
             try {
                 ArrayList<Double> result = (ArrayList<Double>) inform.getContentObject();
                 results.add(result);
-            } catch (
-            UnreadableException e) {
+            } catch (UnreadableException e) {
                 e.printStackTrace();
             }
             // when all results have been received
@@ -106,13 +82,12 @@ public class MngrAgent extends Agent {
 
         @Override
         public int onEnd() {
-            //System.out.println("Agent "+getLocalName()+": RESETING");
             addBehaviour(new MngrAgentServeLoop());
             return super.onEnd();
         }
     }
 
-    private class MngrAgentServeLoop extends SimpleBehaviour { //CyclicBehaviour
+    private class MngrAgentServeLoop extends SimpleBehaviour { // CyclicBehaviour
         AID user = new AID("user", AID.ISLOCALNAME);
         List<String> fuzzyAgents = new ArrayList<String>();
         boolean finished = false;
@@ -124,7 +99,6 @@ public class MngrAgent extends Agent {
                 String cnt = msg.getContent();
                 String type = cnt.substring(0, 2);
                 String file = cnt.substring(2);
-                //System.out.println("manager received: " + msg.getContent());
 
                 if (type.equals("I_")) {
                     boolean found = false;
@@ -219,10 +193,10 @@ public class MngrAgent extends Agent {
                     if (result.length > 0) {
                         ACLMessage msg2 = new ACLMessage(ACLMessage.CFP);
                         for (int i = 0; i < result.length; i++) {
-                            //System.out.println(result[i].getName());
                             msg2.addReceiver(result[i].getName());
                         }
                         msg2.setProtocol(FIPANames.InteractionProtocol.FIPA_CONTRACT_NET);
+
                         // We want to receive a reply in 10 secs
                         msg2.setReplyByDate(new Date(System.currentTimeMillis() + 10000));
                         try {
@@ -255,7 +229,6 @@ public class MngrAgent extends Agent {
         ServiceDescription sd = new ServiceDescription();
         sd.setType("ManagerAgent");
         sd.setName(getName());
-        // sd.setOwnership("TEAM05");
         dfd.setName(getAID());
         dfd.addServices(sd);
 
@@ -271,15 +244,11 @@ public class MngrAgent extends Agent {
     protected ArrayList<Double> aggregate(List<List<Double>> results) {
         //  aggregation = average
         ArrayList<Double> sum_results = new ArrayList<>(Collections.nCopies(results.get(0).size(), 0.));
-        int i = 0;
 
         for (List<Double> res:results) {
-            System.out.print("Results " + i++);
             for (int j=0; j<res.size(); j++) {
-                System.out.print(" " + res.get(j));
                 sum_results.set(j, sum_results.get(j) + res.get(j));
             }
-            System.out.print("\n");
         }
 
         List<Double> avg_results = sum_results.stream().map(d -> d / results.size()).collect(Collectors.toList());
