@@ -102,7 +102,7 @@ public class FzzyAgent extends Agent {
                 result.add(evaluateTipper(variables));
             }
         }
-        else if (domain.equals("qualityservice")) {
+        else if (domain.equals("qualityservice") || domain.equals("qualityservicelarge")) {
             for (Double[] variables:input) {
                 result.add(evaluateQoS(variables));
             }

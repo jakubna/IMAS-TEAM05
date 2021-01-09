@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<SimulationSettings>
+   <title>IMAS_medium_simulation</title>
+   <application>qualityservicelarge</application>
+   <fuzzyagents>8</fuzzyagents>
+   <fuzzySettings>fcl3,fcl3,fcl4,fcl4,fcl5,fcl5,fcl6,fcl6</fuzzySettings>
+   <aggregation>average</aggregation>
+</SimulationSettings>

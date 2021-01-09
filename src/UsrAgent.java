@@ -48,27 +48,27 @@ public class UsrAgent extends Agent {
                 if (msg.getEncoding().equals("String")) {
                     System.out.println("-> USER AGENT: Received '"+msg.getContent()+"'");
                 }
-                else {
-                    ArrayList<Double> res = null;
-                    try {
-                        res = (ArrayList<Double>) msg.getContentObject();
-                    } catch (UnreadableException e) {
-                        e.printStackTrace();
-                    }
-
-                    // save result to file
-                    Path outfile = Paths.get("files").resolve("result_" + currentFile);
-                    try {
-                        FileWriter writer = new FileWriter(outfile.toString());
-                        for (Double val:res) {
-                            writer.write(val + "\n");
-                        }
-                        writer.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                    System.out.println("-> USER AGENT: Received response. Saving results to '" + outfile.toString() + "'");
-                }
+//                else {
+//                    ArrayList<Double> res = null;
+//                    try {
+//                        res = (ArrayList<Double>) msg.getContentObject();
+//                    } catch (UnreadableException e) {
+//                        e.printStackTrace();
+//                    }
+//
+//                    // save result to file
+//                    Path outfile = Paths.get("files").resolve("result_" + currentFile);
+//                    try {
+//                        FileWriter writer = new FileWriter(outfile.toString());
+//                        for (Double val:res) {
+//                            writer.write(val + "\n");
+//                        }
+//                        writer.close();
+//                    } catch (IOException e) {
+//                        e.printStackTrace();
+//                    }
+//                    System.out.println("-> USER AGENT: Received response. Saving results to '" + outfile.toString() + "'");
+//                }
 
                 hasToReadInput = true;
             }

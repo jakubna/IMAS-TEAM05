@@ -15,9 +15,11 @@ import jade.domain.FIPAException;
 
 import jade.util.Logger;
 
+import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -31,10 +33,14 @@ public class MngrAgent extends Agent {
     private class MnrAgentContractNet extends ContractNetInitiator{
         private int nResponders;
         private LinkedList<List<Double>> results = new LinkedList<>();
+        private String file;
+        long startTime;
 
-        public MnrAgentContractNet(Agent a, ACLMessage cfp, int nResponders) {
+        public MnrAgentContractNet(Agent a, ACLMessage cfp, int nResponders, String req_file) {
             super(a, cfp);
             this.nResponders = nResponders; // expected responders
+            this.file = req_file;
+            startTime = System.currentTimeMillis();
         }
 
         protected void handleFailure(ACLMessage failure) {
@@ -66,16 +72,33 @@ public class MngrAgent extends Agent {
             if (results.size() == nResponders) {
                 // aggregate
                 ArrayList<Double> agg_results = aggregate(results);
+                long elapsedTime = System.currentTimeMillis() - startTime;
+
+                // save result to file
+                String res_file = "result_" + this.file.split("/")[1];
+                Path outfile = Paths.get("files").resolve(res_file);
+                try {
+                    FileWriter writer = new FileWriter(outfile.toString());
+                    writer.write("Time elapsed in milliseconds: "+elapsedTime+"\n");
+                    writer.write("Aggregated results: \n");
+                    for (Double val:agg_results) {
+                        writer.write(val + "\n");
+                    }
+                    writer.write("\nRaw values returned by Fuzzy Agents:\n");
+                    for (List<Double> res:results){
+                        writer.write(res + "\n");
+                    }
+
+                    writer.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
 
                 // send final result to user agent
                 ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
                 msg.addReceiver(new AID("user", AID.ISLOCALNAME));
-                try {
-                    msg.setContentObject(agg_results);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                msg.setEncoding("ArrayList<Double>");
+                msg.setContent("Results saved in '"+res_file+"'.");
+                msg.setEncoding("String");
                 send(msg);
             }
         }
@@ -204,7 +227,7 @@ public class MngrAgent extends Agent {
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
-                        myAgent.addBehaviour(new MnrAgentContractNet(myAgent, msg2, result.length));
+                        myAgent.addBehaviour(new MnrAgentContractNet(myAgent, msg2, result.length, file));
                         finished = true;
                     } else {
                         msg = new ACLMessage(ACLMessage.INFORM);
