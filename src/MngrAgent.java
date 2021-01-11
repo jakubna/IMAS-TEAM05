@@ -15,6 +15,7 @@ import jade.domain.FIPAException;
 
 import jade.util.Logger;
 
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -75,7 +76,7 @@ public class MngrAgent extends Agent {
                 long elapsedTime = System.currentTimeMillis() - startTime;
 
                 // save result to file
-                String res_file = "result_" + this.file.split("/")[1];
+                String res_file = "result_" + this.file.split(File.separator)[1];
                 Path outfile = Paths.get("files").resolve(res_file);
                 try {
                     FileWriter writer = new FileWriter(outfile.toString());
